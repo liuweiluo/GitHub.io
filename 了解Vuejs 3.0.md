@@ -29,3 +29,7 @@
 \- 优化打包体积
 - Vue.js 3.0 中移除了一些不常用的 API 例如：inline-template、filter 等
 - 对Tree-shaking的支持更佳
+
+### Vue 3.0 所采用的 Composition Api 与 Vue 2.x使用的Options Api 有什么区别
+- Options Api：指使用包含一个描述组件选项(data、methods、props等)的对象来创建组件的方式，缺点：开发复杂组件，同一个功能逻辑的代码被拆分到不同选项，耦合度相对较高
+- Composition API：指基于函数来创建组件的方式，优点：可以更灵活的组织组件的逻辑，提高可读性和可维护性
