@@ -77,7 +77,7 @@ listProxy.push(100)
 listProxy.push(100)
 ```
 
-#### 优势3：Proxy 不需要侵入对象
+#### 优势3：Proxy 不需要侵入对象（Proxy直接代理对象,defineProperty只能代理对象的属性）
 ```markdown
 const person = {}
 
