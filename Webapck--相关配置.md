@@ -26,10 +26,10 @@ module.exports = {
 
 - 编译装换类Loader：此类Loader会把资源模块转换成Javascript代码
 
---- css-Loader: 把CSS代码转换为Javascript代码
+--- css-loader: 把CSS代码转换为Javascript代码
 
 - 文件操作类Loader：此类Loader会把资源模块拷贝至输出目录，同时把这个资源的访问路径向外导出
 
---- file
+--- file-laoder
 
 ![image](https://user-images.githubusercontent.com/37037802/133782897-024a8fbe-44f5-4684-9ae4-2ecdbcb7de15.png)
