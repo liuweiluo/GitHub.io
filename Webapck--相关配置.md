@@ -30,6 +30,12 @@ module.exports = {
 
 - 文件操作类Loader：此类Loader会把资源模块拷贝至输出目录，同时把这个资源的访问路径向外导出
 
---- file-laoder
+--- file-loader
 
 ![image](https://user-images.githubusercontent.com/37037802/133782897-024a8fbe-44f5-4684-9ae4-2ecdbcb7de15.png)
+
+- 代码检查类Loader：此类Loader会进行代码校验以达到统一风格和格式的效果
+
+--- eslint-loader
+
+
