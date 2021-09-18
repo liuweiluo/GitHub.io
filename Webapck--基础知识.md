@@ -42,16 +42,16 @@ module.exports = {
 
 - file-loader是把资源拷贝至输出目录，同时把资源的访问路径向外导出，而url-loader直接把资源转为文本(例如:data-url)。
 
-#### Webpack与 ES 2015
+### Webpack与 ES 2015
 - 因为模块打包需要，webpack只对import和export进行ES5的转换，其他ES6语法webpack并不能进行转换，若转换需要用到其他加载器，例如bable-loader
 
-####  Webpack 加载资源的方式
+###  Webpack 加载资源的方式
 - 遵循ES Modules标准的import声明
 - 遵循CommonJs标准的require函数
 - 遵循AMD标准的define函数和require函数
 - Loader加载的非JavaScript也会触发资源加载：例如在安装了css-loader的环境下，样式代码中的@import指令和url函数。在安装了html-loader的环境下，HTML代码中图片标签的src属性
 
-#### webpack核心工作原理
+### webpack核心工作原理
 
 ![image](https://user-images.githubusercontent.com/37037802/133885949-9978a9d3-dce1-443e-a387-77646af993b3.png)
 
@@ -64,3 +64,5 @@ module.exports = {
 ![image](https://user-images.githubusercontent.com/37037802/133887777-0e47273b-b4ab-474a-99aa-b8b87e0ee874.png)
 
 <strong>整个打包过程中，Loader机制起了很重要的作用，因为如果没有Loader的话，Webpack就无法实现各种各样类型的资源文件加载</strong>，那Webpack也就只能算是一个用来合并JS模块代码的工具了。
+
+### 插件(Plugin)
