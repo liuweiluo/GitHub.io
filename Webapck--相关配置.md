@@ -38,4 +38,7 @@ module.exports = {
 
 --- eslint-loader
 
+#### file-loader与url-loader的区别
+
+- file-loader是把资源拷贝至输出目录，同时把资源的访问路径向外导出，而url-loader直接把资源转为文本(例如:data-url)。
 
