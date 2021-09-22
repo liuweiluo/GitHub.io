@@ -66,3 +66,193 @@ module.exports = {
 <strong>整个打包过程中，Loader机制起了很重要的作用，因为如果没有Loader的话，Webpack就无法实现各种各样类型的资源文件加载</strong>，那Webpack也就只能算是一个用来合并JS模块代码的工具了。
 
 ### 插件(Plugin)
+
+插件机制的目的是增强Webpack在项目自动化构建方面的能力，Loader就是负责完成项目中各种各样资源模块的加载，从而实现整体项目的模块化，而Plugin则是用来解决项目中除了资源模块打包以外的其他自动化工作，所以说Plugin的能力范围更广，用途自然也就更多。
+
+#### 先介绍几个插件最常见的应用场景
+- 实现自动在打包之前清除 dist 目录（上次的打包结果）
+- 拷贝不需要参与打包的资源文件到输出目录
+- 压缩 Webpack 打包完成后输出的代码
+
+总之，有了Plugin，Webpack几乎’无所不能’，借助插件我们可以轻松实现前端工程化中的绝大多数功能，使得很多初学者把Webpack和前端工程化混淆。
+
+#### 常见插件
+
+<strong>clean-webpack-plugin</strong> ---- 自动清除输出目录的插件
+
+背景：通过之前的尝试，我们发现webpack每次打包的结果就是直接覆盖到dist目录。但dist目录中可能存在一些在上次打包操作时遗留的文件，此时会出现一些已经移除的文件还冗余其中的情况，最终导致线上部署的时候出现多余文件，这显然很不合理。
+
+安装：$ npm install clean-webpack-plugin --save-dev
+
+案例：
+```
+const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+
+module.exports = {
+  mode: 'none',
+  entry: './src/main.js',
+  output: {
+    filename: 'bundle.js',
+    path: path.join(__dirname, 'dist'),
+    publicPath: 'dist/'
+  },
+  module: {
+    rules: [
+      {
+        test: /.css$/,
+        use: [
+          'style-loader',
+          'css-loader'
+        ]
+      },
+      {
+        test: /.png$/,
+        use: {
+          loader: 'url-loader',
+          options: {
+            limit: 10 * 1024 // 10 KB
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    new CleanWebpackPlugin()
+  ]
+}
+
+```
+
+<strong> html-webpack-plugin</strong> ---- 用于生成 HTML 的插件
+
+背景：首先，我们要知道html文件，一般都是通过硬编码的方式，单独存放在项目根目录中。此时会有问题：项目发布时，我们同时要发布根目录下的html+dist里的所有打包文件，还要确保上线后html代码中的资源文件路径正确，非常麻烦；如果打包结果输出的目录或者文件名发生变化，html代码中所对应的script标签也需要我们手动修改。
+
+解决这个问题最好的办法就是让webpack在打包的同时，自动生成对应的html文件，让webpack将打包的bundle文件自动引入页面中；此时需要html-webpack-plugin
+
+安装：$ npm install html-webpack-plugin --save-dev
+
+案例：
+```
+const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  mode: 'none',
+  entry: './src/main.js',
+  output: {
+    filename: 'bundle.js',
+    path: path.join(__dirname, 'dist'),
+    // publicPath: 'dist/'
+  },
+  module: {
+    rules: [
+      {
+        test: /.css$/,
+        use: [
+          'style-loader',
+          'css-loader'
+        ]
+      },
+      {
+        test: /.png$/,
+        use: {
+          loader: 'url-loader',
+          options: {
+            limit: 10 * 1024 // 10 KB
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    // 用于生成 index.html
+    new HtmlWebpackPlugin({
+      title: 'Webpack Plugin Sample',
+      meta: {
+        viewport: 'width=device-width'
+      },
+      template: './src/index.html'
+    }),
+    // 用于生成 about.html
+    new HtmlWebpackPlugin({
+      filename: 'about.html'
+    })
+  ]
+}
+
+```
+
+<strong>copy-webpack-plugin</strong> ---- 用于复制文件的插件
+
+在我们的项目中一般还有一些不需要参与构建的静态文件，那它们最终也需要发布到线上，例如网站的 favicon、robots.txt 等。
+
+一般我们建议，把这类文件统一放在项目根目录下的 public 或者 static 目录中，我们希望 Webpack 在打包时一并将这个目录下所有的文件复制到输出目录。
+
+对于这种需求，我们可以使用 copy-webpack-plugin 插件来帮我们实现。
+
+### 配置多入口打包----多页应用程序
+
+案例
+
+![image](https://user-images.githubusercontent.com/37037802/134323045-d96dc75d-487c-4485-a500-c9d1d57f818b.png)
+
+
+```
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  mode: 'none',
+  entry: {
+    index: './src/index.js',
+    album: './src/album.js'
+  },
+  output: {
+    filename: '[name].bundle.js'
+  },
+  
+  ......
+  
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      title: 'Multi Entry',
+      template: './src/index.html',
+      filename: 'index.html',
+      chunks: ['index']
+    }),
+    new HtmlWebpackPlugin({
+      title: 'Multi Entry',
+      template: './src/album.html',
+      filename: 'album.html',
+      chunks: ['album']
+    })
+  ]
+}
+
+```
+
+### 配置提取公共模块
+
+不同打包入口当中肯定会有公共模块，为了解决此类问题，我们需要提取公共模块
+
+```
+  optimization: {
+    splitChunks: {
+      // 自动提取所有公共模块到单独 bundle
+      chunks: 'all'
+    }
+  },
+```
+
+打包后目录
+
+![image](https://user-images.githubusercontent.com/37037802/134324354-0ef60dbb-406b-40e9-b8dd-fec6ad093665.png)
+
+### 按需加载 ---- 动态导入
+
+
+
