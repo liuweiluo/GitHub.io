@@ -258,5 +258,6 @@ Webpack具备动态导入与自动分包的功能，而此功能无需配置。
 ![image](https://user-images.githubusercontent.com/37037802/134336528-85e48c90-c223-40eb-b089-a941d85d3e2c.png)
 
 下图为打包后结果
+
 ![image](https://user-images.githubusercontent.com/37037802/134478781-c2c185cf-a025-49f1-b2e8-4106ffa8f11c.png)
 
