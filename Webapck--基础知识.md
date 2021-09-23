@@ -149,6 +149,38 @@ module.exports = {
 
 ```
 
+<strong>MiniCssExtractPlugin</strong> ---- 提取CSS到单个文件的插件
+
+```
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+
+module.exports = {
+  mode: 'none',
+  entry: {
+    main: './src/index.js'
+  },
+  output: {
+    filename: '[name].bundle.js'
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          // 'style-loader', // 将样式通过 style 标签注入
+          MiniCssExtractPlugin.loader,
+          'css-loader'
+        ]
+      }
+    ]
+  },
+  plugins: [
+    new MiniCssExtractPlugin()
+  ]
+}
+```
+
 <strong>copy-webpack-plugin</strong> ---- 用于复制文件的插件
 
 在我们的项目中一般还有一些不需要参与构建的静态文件，那它们最终也需要发布到线上，例如网站的 favicon、robots.txt 等。
@@ -218,8 +250,10 @@ module.exports = {
 
 ### 按需加载 ---- 动态导入
 
-
+Webpack具备动态导入与自动分包的功能，而此功能无需配置。
 
 ![image](https://user-images.githubusercontent.com/37037802/134336528-85e48c90-c223-40eb-b089-a941d85d3e2c.png)
 
+下图为打包后结果
+![image](https://user-images.githubusercontent.com/37037802/134478781-c2c185cf-a025-49f1-b2e8-4106ffa8f11c.png)
 
