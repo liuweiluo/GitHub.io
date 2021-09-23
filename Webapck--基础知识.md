@@ -70,9 +70,10 @@ module.exports = {
 插件机制的目的是增强Webpack在项目自动化构建方面的能力，Loader就是负责完成项目中各种各样资源模块的加载，从而实现整体项目的模块化，而Plugin则是用来解决项目中除了资源模块打包以外的其他自动化工作，所以说Plugin的能力范围更广，用途自然也就更多。
 
 #### 先介绍几个插件最常见的应用场景
-- 实现自动在打包之前清除 dist 目录（上次的打包结果）
-- 拷贝不需要参与打包的资源文件到输出目录
-- 压缩 Webpack 打包完成后输出的代码
+- 实现自动在打包之前清除 dist 目录（上次的打包结果）--- clean-webpack-plugin
+- 拷贝不需要参与打包的资源文件到输出目录 --- copy-webpack-plugin
+- 压缩 Webpack 打包完成后输出的代码 --- OptimizeCssAssetsWebpackPlugin
+- 提取CSS到单个文件 --- MiniCssExtractPlugin
 
 总之，有了Plugin，Webpack几乎’无所不能’，借助插件我们可以轻松实现前端工程化中的绝大多数功能，使得很多初学者把Webpack和前端工程化混淆。
 
@@ -249,6 +250,8 @@ module.exports = {
 ![image](https://user-images.githubusercontent.com/37037802/134324354-0ef60dbb-406b-40e9-b8dd-fec6ad093665.png)
 
 ### 按需加载 ---- 动态导入
+
+背景：所有代码最终都被打包到一起会导致bundle体积过大，容易造成流量与带宽的浪费，为解决此类问题，Webpack为我们提供了分包（按需加载）的功能。
 
 Webpack具备动态导入与自动分包的功能，而此功能无需配置。
 
