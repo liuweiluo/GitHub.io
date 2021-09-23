@@ -253,11 +253,34 @@ module.exports = {
 
 背景：所有代码最终都被打包到一起会导致bundle体积过大，容易造成流量与带宽的浪费，为解决此类问题，Webpack为我们提供了分包（按需加载）的功能。
 
-Webpack具备动态导入与自动分包的功能，而此功能无需配置。
+Webpack已具备动态导入与自动分包的功能，而此功能无需配置。
 
 ![image](https://user-images.githubusercontent.com/37037802/134336528-85e48c90-c223-40eb-b089-a941d85d3e2c.png)
 
 下图为打包后结果
 
 ![image](https://user-images.githubusercontent.com/37037802/134478781-c2c185cf-a025-49f1-b2e8-4106ffa8f11c.png)
+
+### Tree Shaking --- "摇掉"代码未引用部分（dead-code）
+
+Tree Shaking并不是指某个配置选项，produciton环境下自动开启（无需配置），但是在非produciton环境可以进行优化
+
+```
+module.exports = {
+  mode: 'none',
+  entry: './src/index.js',
+  output: {
+    filename: 'bundle.js'
+  },
+  optimization: {
+    // 模块只导出被使用的成员
+    usedExports: true,
+    // 尽可能合并每一个模块到一个函数中
+    concatenateModules: true,
+    // 压缩输出结果
+    // minimize: true
+  }
+}
+
+```
 
