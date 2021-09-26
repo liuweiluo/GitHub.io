@@ -284,3 +284,68 @@ module.exports = {
 
 ```
 
+### HMR --- 模块热更新（热替换）
+
+背景：自动刷新会导致页面状态丢失，热替换（HMR）可以很好解决此问题。
+
+HMR概述：应用运行过程中实时替换某个模块而应用运行状态不受影响。
+
+```
+const webpack = require('webpack')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  devServer: {
+    hot: true
+    // hotOnly: true // 只使用 HMR，不会 fallback 到 live reloading
+  },
+
+  plugins: [
+    new webpack.HotModuleReplacementPlugin()
+  ]
+}
+
+```
+
+PS：Webpack开启HMR后，HMR并不可以开箱即用（需要手动处理模块热替换逻辑）
+
+#### Q1.为什么样式文件的热更新开箱即用？
+
+那是因为样式文件经过style-Loader处理了，故不需要手动处理热更新。
+
+![image](https://user-images.githubusercontent.com/37037802/134803603-09f1f053-2c0f-42ef-b2ae-11df01ba99d1.png)
+
+#### Q2.凭什么样式文件可以自动处理，而脚本文件却需要手动处理？
+
+那是因为样式模块更新后，只需把更新后的CSS即时替换到页面中就能覆盖之前样式，从而实现样式文件的更新。但是脚本（JS）模块并没任何规律的，因为脚本模块可能导出的是对象、字符串、函数......
+Webpack面对这些毫无规律的JS模块不知道如何去处理，没办法实现通用的模块替换方案。
+
+#### Q3.使用部分框架的项目没有手动处理，JS照样可以热替换?
+
+因为框架下的开发，每种文件都是有规律的，有了规律就有通用的替换的办法。例如React.js框架下每个文件导出的必须是函数或则类，把导出的函数再执行一遍即可实现热替换。
+
+### HMR API --- 手动处理热更新
+
+```
+if (module.hot) {
+  let lastEditor = editor
+  module.hot.accept('./editor', () => {
+    // console.log('editor 模块更新了，需要这里手动处理热替换逻辑')
+    // console.log(createEditor)
+
+    const value = lastEditor.innerHTML
+    document.body.removeChild(lastEditor)
+    const newEditor = createEditor()
+    newEditor.innerHTML = value
+    document.body.appendChild(newEditor)
+    lastEditor = newEditor
+  })
+
+  module.hot.accept('./better.png', () => {
+    img.src = background
+    console.log(background)
+  })
+}
+```
+
+
