@@ -341,6 +341,49 @@ class Watcher {
 
 ![image](https://user-images.githubusercontent.com/37037802/137484793-119c3d8a-025a-415f-8d59-590821b81ce1.png)
 
+- Vue
+
+  记录传入的选项，设置 $data/$el
   
+  把 data 的成员注入到 Vue 实例
+  
+  负责调用 Observer 实现数据响应式处理（数据劫持）
+  
+  负责调用 Compiler 编译指令/插值表达式等
+
+- Observer
+
+  数据劫持
+  
+         负责把 data 中的成员转换成 getter/setter
+    
+         负责把多层属性转换成 getter/setter
+    
+         如果给属性赋值为新对象，把新对象的成员设置为 getter/setter
+    
+  添加 Dep 和 Watcher 的依赖关系
+  
+  数据变化发送通知
+  
+- Compiler
+
+  负责编译模板，解析指令/插值表达式
+  
+  负责页面的首次渲染过程
+  
+  当数据变化后重新渲染
+  
+- Dep
+
+  收集依赖，添加订阅者(watcher)
+  
+  通知所有订阅者
+  
+- Watcher
+
+  自身实例化的时候往dep对象中添加自己
+  
+  当数据变化dep通知所有的 Watcher 实例更新视图  
+
  
 
