@@ -133,3 +133,142 @@
     console.log(vm.msg)
 ```
 
+### 发布/订阅模式
+
+- 发布/订阅模式由三部分组成：订阅者、发布者、信号中心
+
+- 前言：假设你是学生家长，在学校每次考完试后都想要获得孩子的成绩，由于之前没有班级成绩订阅系统，家长只能每天都催促孩子成绩出了没。现在班级有了成绩订阅系统，家长可以到孩子班级订阅成绩（相当于注册事件），一旦老师公布成绩（相当于触发了事件），成绩由班级订阅系统以短形式发送给家长（不需要天都催促孩子），这案例中，家长就是订阅者，老师就是发布者，班级订阅系统就是信号中心。
+
+- 概述：我们假定，存在一个"信号中心"，某个任务执行完成，就向信号中心"发布"（publish）一个信号，其他任务可以向信号中心"订阅"（subscribe）这个信号，从而知道什么时候自己可以开始执行。这就叫做"发布/订阅模式"（publish-subscribe pattern）
+
+- Vue自定义事件
+
+https://cn.vuejs.org/v2/guide/migration.html#dispatch-%E5%92%8C-broadcast-%E6%9B%BF%E6%8D%A2
+
+```
+let vm = new Vue()
+vm.$on('dataChange', () => {
+console.log('dataChange')
+})
+vm.$on('dataChange', () => {
+console.log('dataChange1')
+})
+vm.$emit('dataChange')
+
+```
+
+- 兄弟组件通信过程
+```
+// eventBus.js
+// 事件中心
+let eventHub = new Vue()
+// ComponentA.vue
+// 发布者
+addTodo: function () {
+// 发布消息(事件)
+eventHub.$emit('add-todo', { text: this.newTodoText })
+this.newTodoText = ''
+}
+// ComponentB.vue
+// 订阅者
+created: function () {
+// 订阅消息(事件)
+eventHub.$on('add-todo', this.addTodo)
+}
+```
+
+- 模拟 Vue 自定义事件的实现
+
+```
+class EventEmitter {
+constructor () {
+// { eventType: [ handler1, handler2 ] }
+this.subs = {}
+}
+// 订阅通知
+$on (eventType, handler) {
+this.subs[eventType] = this.subs[eventType] || []
+this.subs[eventType].push(handler)
+}
+// 发布通知
+$emit (eventType) {
+if (this.subs[eventType]) {
+this.subs[eventType].forEach(handler => {
+handler()
+})
+}
+}
+}
+// 测试
+var bus = new EventEmitter()
+// 注册事件
+bus.$on('click', function () {
+console.log('click')
+})
+bus.$on('click', function () {
+console.log('click1')
+})
+// 触发事件
+bus.$emit('click')
+
+```
+
+### 观察者模式
+
+- 观察者模式由2部分组成：观察者(订阅者)-Watcher、目标(发布者)-Dep
+
+- 观察者(订阅者) -- Watcher  --> update()：当事件发生时，具体要做的事情
+
+- 目标(发布者) -- Dep --> 1.subs 数组：存储所有的观察者   2.addSub()：添加观察者    3.notify()：当事件发生，调用所有观察者的 update() 方法
+
+- ps：观察者模式与发布/订阅模式区别：1.观察者模式没有事件中心 2.观察者模式下，发布者需要知道订阅者的存在，而发布/订阅模式下却不需要
+
+```
+// 目标(发布者)
+// Dependency
+class Dep {
+constructor () {
+// 存储所有的观察者
+this.subs = []
+}
+// 添加观察者
+addSub (sub) {
+if (sub && sub.update) {
+this.subs.push(sub)
+}
+}
+// 通知所有观察者
+notify () {
+this.subs.forEach(sub => {
+sub.update()
+})
+}
+}
+// 观察者(订阅者)
+class Watcher {
+update () {
+console.log('update')
+}
+}
+// 测试
+let dep = new Dep()
+let watcher = new Watcher()
+dep.addSub(watcher)
+dep.notify()
+
+```
+
+#### 总结
+
+- 观察者模式是由具体目标调度，比如当事件触发，Dep 就会去调用观察者的方法，所以观察者模式的订阅者与发布者之间是存在依赖的。
+- 发布/订阅模式由统一调度中心调用，因此发布者和订阅者不需要知道对方的存在。
+
+![image](https://user-images.githubusercontent.com/37037802/137469212-09cf9311-09b9-4da1-817a-15cf21c0af9a.png)
+
+
+
+
+
+
+
+
