@@ -101,7 +101,7 @@ new Vue({
   
    - 如果你把它作用到普通 HTML 标签上，则获取到的是 DOM
    - 如果你把它作用到组件标签上，则获取到的是组件实例
-
+   
 
 ### 简易的状态管理方案
   
@@ -189,6 +189,193 @@ ps：注意：Vuex 不要滥用，不符合以上需求的业务不要使用，�
 
 ![image](https://user-images.githubusercontent.com/37037802/137713385-62482290-d8e0-4552-855d-5a26a8fea47b.png)
 
+#### 基本结构
 
+- State
+
+Vuex 使用单一状态树，用一个对象就包含了全部的应用层级状态。使用 mapState 简化 State 在视图中的使用，mapState 返回计算属性mapState 有两种使用的方式：
+
+    - 接收数组参数
+```
+// 该方法是 vuex 提供的，所以使用前要先导入
+import { mapState } from 'vuex'
+// mapState 返回名称为 count 和 msg 的计算属性
+// 在模板中直接使用 count 和 msg
+computed: {
+    ...mapState(['count', 'msg']),
+}
+```
+
+    - 接收对象参数
+ ```
+// 该方法是 vuex 提供的，所以使用前要先导入
+import { mapState } from "vuex";
+// 通过传入对象，可以重命名返回的计算属性
+// 在模板中直接使用 num 和 message
+computed: {
+    ...mapState({
+        num: state => state.count,
+        message: state => state.msg
+    });
+}
+ ```
+ 
+ - Getter
+ 
+Getter 就是 store 中的计算属性，使用 mapGetter 简化视图中的使用
+
+```
+import { mapGetter } from "vuex";
+computed: {
+   ...mapGetter(["reverseMsg"]),
+        // 改名，在模板中使用 reverse
+    ...mapGetter({
+        reverse: "reverseMsg"
+    });
+}
+```
+    
+- Mutation
+
+更改 Vuex 的 store 中的状态的唯一方法是提交 mutation。Vuex 中的 mutation 非常类似于事件：每个 mutation 都有一个字符串的 事件类型 (type) 和 一个 回调函数 (handler)。这个回调函数就是我们
+实际进行状态更改的地方，并且它会接受 state 作为第一个参数。
+
+使用 Mutation 改变状态的好处是，集中的一个位置对状态修改，不管在什么地方修改，都可以追踪到状态的修改。可以实现高级的 time-travel 调试功能
+
+```
+import { mapMutations } from "vuex";
+methods: {
+    ...mapMutations(["increate"]),
+        // 传对象解决重名的问题
+    ...mapMutations({
+        increateMut: "increate"
+    });
+}
+```
+
+- Action
+
+    Action 类似于 mutation，不同在于：
+
+   - Action 提交的是 mutation，而不是直接变更状态。
+   - Action 可以包含任意异步操作。
+          
+    
+```
+import { mapActions } from "vuex";
+methods: {
+    ...mapActions(["increate"]),
+        // 传对象解决重名的问题
+    ...mapActions({
+        increateAction: "increate"
+    });
+}
+```
+
+- Module
+
+由于使用单一状态树，应用的所有状态会集中到一个比较大的对象。当应用变得非常复杂时，store 对象就有可能变得相当臃肿。
+
+为了解决以上问题，Vuex 允许我们将 store 分割成模块（module）。每个模块拥有自己的 state、mutation、action、getter、甚至是嵌套子模块。
+
+#### 购物车案例 --- 省略
+
+
+### Vuex模拟实现
+
+回顾基础示例，自己模拟实现一个 Vuex 实现同样的功能
+
+```
+import Vue from "vue";
+import Vuex from "vuex";
+Vue.use(Vuex);
+export default new Vuex.Store({
+    state: {
+        count: 0,
+        msg: "Hello World"
+    },
+    getters: {
+        reverseMsg(state) {
+            return state.msg
+                .split("")
+                .reverse()
+                .join("");
+        }
+    },
+    mutations: {
+        increate(state, payload) {
+            state.count += payload.num;
+        }
+    },
+    actions: {
+        increate(context, payload) {
+            setTimeout(() => {
+                context.commit("increate", { num: 5 });
+            }, 2000);
+        }
+    }
+});
+```
+
+#### 实现思路
+
+ - 实现 install 方法
+   - Vuex 是 Vue 的一个插件，所以和模拟 VueRouter 类似，先实现 Vue 插件约定的 install 方法
+- 实现 Store 类
+    - 实现构造函数，接收 options
+    - state 的响应化处理
+    - getter 的实现
+    - commit、dispatch 方法
+
+#### install 方法
+
+```
+let _Vue = null;
+function install(Vue) {
+    _Vue = Vue;
+    _Vue.mixin({
+        beforeCreate() {
+            if (this.$options.store) {
+                Vue.prototype.$store = this.$options.store;
+            }
+        }
+    });
+}
+``
+
+#### Store 类
+
+```
+class Store {
+    constructor(options) {
+        const { state = {}, getters = {}, mutations = {}, actions = {} } = options;
+        this.state = _Vue.observable(state);
+        // 此处不直接 this.getters = getters，是因为下面的代码中要方法 getters 中的 key
+        // 如果这么写的话，会导致 this.getters 和 getters 指向同一个对象
+        // 当访问 getters 的 key 的时候，实际上就是访问 this.getters 的 key 会触发 key 属性的 getter
+        // 会产生死递归
+        this.getters = Object.create(null);
+        Object.keys(getters).forEach(key => {
+            Object.defineProperty(this.getters, key, {
+                get: () => getters[key](this.state)
+            });
+        });
+        this.mutations = mutations;
+        this.actions = actions;
+    }
+    commit(type, payload) {
+        this.mutations[type](this.state, payload);
+    }
+    dispatch(type, payload) {
+        this.actions[type](this, payload);
+    }
+}
+// 导出模块
+export default {
+    Store,
+    install
+};
+
+```
 
 
