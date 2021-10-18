@@ -341,7 +341,7 @@ function install(Vue) {
         }
     });
 }
-``
+```
 
 #### Store 类
 
