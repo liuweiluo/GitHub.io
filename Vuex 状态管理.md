@@ -121,4 +121,74 @@ new Vue({
 
 这里我们先以一种简单的方式来实现
 
+- 首先创建一个共享的仓库 store 对象
+
+```
+export default {
+    debug: true,
+    state: {
+        user: {
+            name: "xiaomao",
+            age: 18,
+            sex: "男"
+        }
+    },
+    setUserNameAction(name) {
+        if (this.debug) {
+            console.log("setUserNameAction triggered：", name);
+        }
+        this.state.user.name = name;
+    }
+};
+```
+
+- 把共享的仓库 store 对象，存储到需要共享状态的组件的 data 中
+
+```
+import store from "./store";
+export default {
+    methods: {
+        // 点击按钮的时候通过 action 修改状态
+        change() {
+            store.setUserNameAction("componentB");
+        }
+    },
+    data() {
+        return {
+            privateState: {},
+            sharedState: store.state
+        };
+    }
+};
+```
+
+接着我们继续延伸约定，组件不允许直接变更属于 store 对象的 state，而应执行 action 来分发(dispatch) 事件通知 store 去改变，这样最终的样子跟 Vuex 的结构就类似了。这样约定的好处是，我们能够记录所有 store 中发生的 state 变更，同时实现能做到记录变更、保存状态快照、历史回滚/时光旅行的先进的调试工具。
+
+### Vuex 回顾
+
+> Vuex 是一个专为 Vue.js 应用程序开发的状态管理模式。它采用集中式存储管理应用的所有组件的状态，并以相应的规则保证状态以一种可预测的方式发生变化。Vuex 也集成到 Vue 的官方调试工具 devtools extension，提供了诸如零配置的 time-travel 调试、状态快照导入导出等高级调试功能。
+
+- Vuex 是专门为 Vue.js 设计的状态管理库
+- 它采用集中式的方式存储需要共享的数据
+- 从使用角度，它就是一个 JavaScript 库
+- 它的作用是进行状态管理，解决复杂组件通信，数据共享
+
+#### 什么情况下使用 Vuex
+
+> 官方文档：Vuex 可以帮助我们管理共享状态，并附带了更多的概念和框架。这需要对短期和长期效益进行权衡。如果您不打算开发大型单页应用，使用 Vuex 可能是繁琐冗余的。确实是如此——如果您的应用够简单，您最好不要使用 Vuex。一个简单的 store 模式就足够您所需了。但是，如果您需要构建一个中大型单页应用，您很可能会考虑如何更好地在组件外部管理状态，Vuex 将会成为自然而然的选择。引用 Redux 的作者 Dan Abramov 的话说就是：Flux 架构就像眼镜：您自会知道什么时候需要它。
+
+当你的应用中具有以下需求场景的时候：
+- 多个视图依赖于同一状态
+- 来自不同视图的行为需要变更同一状态
+
+建议符合这种场景的业务使用 Vuex 来进行数据管理，例如非常典型的场景：购物车。
+
+ps：注意：Vuex 不要滥用，不符合以上需求的业务不要使用，反而会让你的应用变得更麻烦。
+
+#### 流程图
+
+![image](https://user-images.githubusercontent.com/37037802/137713385-62482290-d8e0-4552-855d-5a26a8fea47b.png)
+
+
+
 
