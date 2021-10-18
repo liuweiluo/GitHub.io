@@ -355,11 +355,9 @@ class Watcher {
 
   数据劫持
   
-         负责把 data 中的成员转换成 getter/setter
-    
-         负责把多层属性转换成 getter/setter
-    
-         如果给属性赋值为新对象，把新对象的成员设置为 getter/setter
+    - 负责把 data 中的成员转换成 getter/setter
+    - 负责把多层属性转换成 getter/setter
+    - 如果给属性赋值为新对象，把新对象的成员设置为 getter/setter
     
   添加 Dep 和 Watcher 的依赖关系
   
