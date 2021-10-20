@@ -206,4 +206,8 @@ server.get("*", (req, res) => {
 server.listen(8080);
 ```
 
-###
+### 构建同构渲染
+
+#### 构建流程
+
+![image](https://user-images.githubusercontent.com/37037802/138077382-aafdcd77-d57d-4f74-9b7b-c28756226251.png)
