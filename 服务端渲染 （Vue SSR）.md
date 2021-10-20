@@ -211,3 +211,96 @@ server.listen(8080);
 #### 构建流程
 
 ![image](https://user-images.githubusercontent.com/37037802/138077382-aafdcd77-d57d-4f74-9b7b-c28756226251.png)
+
+之前的代码我们只处理了服务端渲染部分，如果想让服务端渲染的内容拥有客户端动态交互的能力，那我们必须有客户端脚本去接管服务端渲染后内容
+
+由上图可知
+
+- Server entry（服务端入口）通过Webpakc打包后得到 Server Bundle, 负责处理服务端渲染但不具有动态交互的能力
+- Client entry（客户端入口）通过Webpakc打包后得到 Client Bundle, 负责处理客户端渲染并接管服务端渲染后内容把它激活成具有动态交互的能力的动态页面
+
+### 源码结构
+
+```
+src
+├── components
+│ ├── Foo.vue
+│ ├── Bar.vue
+│ └── Baz.vue
+├── App.vue
+├── app.js # 通用 entry(universal entry)
+├── entry-client.js # 仅运行于浏览器
+└── entry-server.js # 仅运行于服务器
+
+```
+
+#### App.vue
+
+```
+<template>
+    <!-- 客户端渲染的入口节点 -->
+    <div id="app">
+        <h1>拉勾教育</h1>
+    </div>
+</template>
+<script>
+export default {
+    name: "App"
+};
+</script>
+<style></style>
+```
+
+#### app.js
+
+app.js 是我们应用程序的「通用 entry」。在纯客户端应用程序中，我们将在此文件中创建根 Vue 实例，并直接挂载到 DOM。但是，对于服务器端渲染(SSR)，责任转移到纯客户端 entry 文件。 app.js简单地使用 export 导出一个 createApp 函数：
+```
+import Vue from "vue";
+import App from "./App.vue";
+// 导出一个工厂函数，用于创建新的
+// 应用程序、router 和 store 实例
+export function createApp() {
+    const app = new Vue({
+        // 根实例简单的渲染应用程序组件。
+        render: h => h(App)
+    });
+    return { app };
+}
+```
+
+#### entry-client.js
+
+客户端 entry 只需创建应用程序，并且将其挂载到 DOM 中：
+
+```
+import { createApp } from "./app";
+// 客户端特定引导逻辑……
+const { app } = createApp();
+// 这里假定 App.vue 模板中根元素具有 `id="app"`
+app.$mount("#app");
+```
+
+#### entry-server.js
+服务器 entry 使用 default export 导出函数，并在每次渲染中重复调用此函数。此时，除了创建和返回应用程序实例之外，它不会做太多事情 - 但是稍后我们将在此执行服务器端路由匹配 (server-sideroute matching) 和数据预取逻辑 (data pre-fetching logic)。
+
+```
+import { createApp } from "./app";
+export default context => {
+    const { app } = createApp();
+    return app;
+};
+```
+
+#### 安装依赖
+--- 忽略
+
+#### webpack配置文件
+
+（1）初始化 webpack 打包配置文件
+```
+build
+├── webpack.base.config.js # 公共配置
+├── webpack.client.config.js # 客户端打包配置文件
+└── webpack.server.config.js # 服务端打包配置文件
+```
+
