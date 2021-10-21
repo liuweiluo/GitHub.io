@@ -649,7 +649,7 @@ server.listen(3000, () => {
 
   所以接下来要做的第一件事儿就是把 Vuex 容器创建出来。
 
-  （1）通过 Vuex 创建容器实例，并挂载到 Vue 根实例
+（1）通过 Vuex 创建容器实例，并挂载到 Vue 根实例
   
   创建 Vuex 容器：
   
@@ -698,7 +698,7 @@ import { createStore } from "./store";
 Vue.use(VueMeta);
 Vue.mixin({
     metaInfo: {
-        titleTemplate: "%s - 拉勾教育"
+        titleTemplate: "%s - liuiweiluo"
     }
 });
 
@@ -771,3 +771,51 @@ export default {
 <style></style>
   ```
   
+（3）在服务端渲染应用入口中将容器状态序列化到页面中
+  
+  接下来我们要做的就是把在服务端渲染期间所获取填充到容器中的数据同步到客户端容器中，从而避免两个端状态不一致导致客户端重新渲染的问题。
+  
+  
+  ```
+  **
+ * entry-server.js  //服务端入口
+ */
+  
+ import { createApp } from './app'
+
+  export default async context => {
+
+    ......
+
+      context.rendered = () => {
+        // Renderer 会把 context.state 数据对象内联到页面模板中
+        // 最终发送给客户端的页面中会包含一段脚本：window.__INITIAL_STATE__ = context.state
+        // 客户端就要把页面中的 window.__INITIAL_STATE__ 拿出来填充到客户端 store 容器中
+        context.state = store.state
+      }
+
+  }
+  ```
+  
+（4）最后，在客户端渲染入口中把服务端传递过来的状态数据填充到客户端 Vuex 容器中
+  
+    ```
+/**
+ * 客户端入口
+ */
+import { createApp } from './app'
+
+// 客户端特定引导逻辑……
+
+const { app, router, store } = createApp()
+
+ // 如果当前页面中有 __INITIAL_STATE__ 数据，则直接将其填充到客户端容器中
+if (window.__INITIAL_STATE__) {
+  // We initialize the store state with the data injected from the server
+  store.replaceState(window.__INITIAL_STATE__)
+}
+
+router.onReady(() => {
+  app.$mount('#app')
+})
+  ```
