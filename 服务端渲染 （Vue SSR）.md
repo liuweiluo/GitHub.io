@@ -557,3 +557,50 @@ server.listen(3000, () => {
 
 ### 解析渲染流程
 
+- 服务端如何进行渲染
+
+  当客户端请求后，就被服务端路由匹配(上述server.js文件可查看服务端路由)，调用renderer.renderToString()开始进行渲染，我们都知道renderToString()会接收Vue实例进行渲染，但是在上述server.js中并   没有Vue实例，那到底是否有Vue实例呢？答案是有的，只不过此时Vue实例是通过createBundleRenderer()创建，而createBundleRenderer()第一个参数serverBundle（服务端打包后的vue-ssr-server-         bundle.json文件）。
+  
+  vue-ssr-server-bundle.json
+  
+  ![image](https://user-images.githubusercontent.com/37037802/138230335-f3a16741-7054-4798-8263-30f5fdc0f0e5.png)
+
+  - entry：入口
+  - files：所有构建结果资源列表
+  - maps：源代码 source map 信息
+
+  当调用renderer.renderToString()进行渲染之前，renderer已经加载了serverBundle里的entry（这里为server-bundle.js），从而得到在server-entry.js里创建的Vue实例并同时进行渲染，把渲染后结果注入   template模板中，最后把渲染后的结果发送给客户端，这是就是服务端渲染过程。
+  
+- 客户端如何渲染并激活服务端渲染后的内容
+  
+  我们发现服务端发送过来的内容会包含了客户端脚本（之前测试是不会的），那服务端是如何知道需要加载的客户脚本？
+  
+  其实是通过我们配置createBundleRenderer()时的clientManifest（客户端打包后的vue-ssr-client-manifest.json文件）里查找得到的，在服务端渲染时会把initial资源文件自动注入到template模板中
+   <!--vue-ssr-outlet--> 后面，从而把需要的客户端脚本注入。
+   
+   ![image](https://user-images.githubusercontent.com/37037802/138243244-c3f795b3-de59-4910-b0e4-b801a6251b69.png)
+
+    <!--vue-ssr-outlet-->
+  
+   vue-ssr-client-manifest.json
+   
+  ![image](https://user-images.githubusercontent.com/37037802/138237973-9a5ba1e3-7d33-411c-b28c-c873c853e86d.png)
+  
+  - publicPath：访问静态资源的根相对路径，与 webpack 配置中的 publicPath 一致
+  - all：打包后的所有静态资源文件路径
+  - initial：页面初始化时需要加载的文件，会在页面加载时配置到 preload 中
+  - async：页面跳转时需要加载的文件，会在页面加载时配置到 prefetch 中
+  - modules：项目的各个模块包含的文件的序号，对应 all 中文件的顺序；moduleIdentifier和all数组中文件的映射关系（modules对象是我们查找文件引用的重要数据）
+  
+  所谓客户端激活，指的是 Vue 在浏览器端接管由服务端发送的静态 HTML，使其变为由 Vue 管理的动态 DOM 的过程。
+  
+  由于服务器已经渲染好了 HTML，我们显然无需将其丢弃再重新创建所有的 DOM 元素。相反，我们需要"激活"这些静态的 HTML，然后使他们成为动态的（能够响应后续的数据变化）。
+
+  如果你检查服务器渲染的输出结果，你会注意到应用程序的根元素上添加了一个特殊的属性 <div id="app" data-server-rendered="true">
+  
+  data-server-rendered 特殊属性，让客户端 Vue 知道这部分 HTML 是由 Vue 在服务端渲染的，并且应该以激活模式进行挂载。注意，这里并没有添加 id="app"，而是添加 data-server-rendered 属性：你需   要自行添加 ID 或其他能够选取到应用程序根元素的选择器，否则应用程序将无法正常激活。
+  
+  如何进行激活是VueDom处理的事情...
+  
+  激活参考 https://ssr.vuejs.org/zh/guide/hydration.html  
+ 
