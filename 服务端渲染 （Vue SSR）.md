@@ -603,4 +603,171 @@ server.listen(3000, () => {
   如何进行激活是VueDom处理的事情...
   
   激活参考 https://ssr.vuejs.org/zh/guide/hydration.html  
+  
+ ### 数据预取和状态
  
+  我们的需求就是：
+  - 已知有一个数据接口，接口返回一个文章列表数据
+  - 我们想要通过服务端渲染的方式来把异步接口数据渲染到页面中
+  这个需求看起来是不是很简单呢？无非就是在页面发请求拿数据，然后在模板中遍历出来，如果是纯客户端渲染的话确实就是这样的，但是想要通过服务端渲染的方式来处理的话就比较麻烦了。
+  
+  ![image](https://user-images.githubusercontent.com/37037802/138253533-1a6e8a2a-47fb-42e6-8703-34f1c180b818.png)
+  
+  也就是说我们要在服务端获取异步接口数据，交给 Vue 组件去渲染。
+  
+  我们首先想到的肯定是在组件的生命周期钩子中请求获取数据渲染页面，那我们可以顺着这个思路来试一下。
+  
+  在组件中添加生命周期钩子，beforeCreate 和 created，服务端渲染仅支持这两个钩子函数的调用。然后下一个问题是如何在服务端发送请求？依然使用 axios，axios 既可以运行在客户端也可以运行在
+服务端，因为它对不同的环境做了适配处理，在客户端是基于浏览器的 XMLHttpRequest 请求对象，在服务端是基于 Node.js 中的 http 模块实现，无论是底层是什么，上层的使用方式都是一样的。
+  
+  ```
+  // 服务端渲染
+// 只支持 beforeCreate 和 created
+// 不会等待 beforeCreate 和 created 中的异步操作
+// 不支持响应式数据
+// 所以这种做法在服务端渲染时不会工作的!  
+// async created () {
+// const { data } = await axios({
+// method: 'GET',
+// url: 'https://cnodejs.org/api/v1/topics'
+// })
+// this.posts = data.data
+// }
+  ```
+  
+  显然，上面做法服务端渲染时是不会工作的，因为服务端渲染时不会等待 beforeCreate 和 created 中的异步操作，而且也不支持响应式数据
+  
+  > 在服务器端渲染(SSR)期间，我们本质上是在渲染我们应用程序的"快照"，所以如果应用程序依赖于一些异步数据，<strong>那么在开始渲染过程之前，需要先预取和解析好这些数据</strong>。
+  > 另一个需要关注的问题是在客户端，在挂载 (mount) 到客户端应用程序之前，<strong>需要获取到与服务器端应用程序完全相同的数据</strong> - 否则，客户端应用程序会因为使用与服务器端应用程序不同的状态，然后导致混合失败。
+  
+  接下来我们就按照官方文档给出的参考来把服务端渲染中的数据预取以及状态管理来处理一下。
+  
+  通过官方文档我们可以看到，它的核心思路就是把在服务端渲染期间获取的数据存储到 Vuex 容器中，然后把容器中的数据同步到客户端，这样就保持了前后端渲染的数据状态同步，避免了客户端重新渲染
+的问题。
+  
+  具体思路：首先，在服务器端，我们可以在渲染之前预取数据，并将数据填充到 store（Vuex 容器）中。然后为了让客户端拿到服务端渲染之前预取的数据(状态)（同步给客户端） 我们会把数据(状态)通过序列化 (serialize) 后内置(记录)在 HTML页面中。这样，在挂载(mount)到客户端应用程序之前，可以直接从html页面中拿到之前内置(记录)序列化的数据(状态) 去初始化 store（Vuex 容器），这样服务端和客户端的数据（状态）就能达到同步效果。
+
+  所以接下来要做的第一件事儿就是把 Vuex 容器创建出来。
+
+  （1）通过 Vuex 创建容器实例，并挂载到 Vue 根实例
+  
+  创建 Vuex 容器：
+  
+  ./store/index.js
+  
+  ```
+  import Vue from "vue";
+  import Vuex from "vuex";
+  import axios from "axios";
+  Vue.use(Vuex);
+  export const createStore = () => {
+      return new Vuex.Store({
+          state: {
+              posts: [] // 文章列表
+          },
+          mutations: {
+              // 修改容器状态
+              setPosts(state, data) {
+                  state.posts = data;
+              }
+          },
+          actions: {
+              async getPosts({ commit }) {
+                  const { data } = await axios({
+                      method: "GET",
+                      url: "https://cnodejs.org/api/v1/topics"
+                  });
+                  commit("setPosts", data.data);
+              }
+          }
+      });
+  };
+  ```
+  
+  在通用应用入口中将 Vuex 容器挂载到 Vue 根实例：
+  
+  ```
+**
+ * 通用启动入口
+ */
+import Vue from "vue";
+import App from "./App.vue";
+import { createRouter } from "./router/";
+import VueMeta from "vue-meta";
+import { createStore } from "./store";
+Vue.use(VueMeta);
+Vue.mixin({
+    metaInfo: {
+        titleTemplate: "%s - 拉勾教育"
+    }
+});
+
+// 导出一个工厂函数，用于创建新的
+// 应用程序、router 和 store 实例
+export function createApp() {
+    const router = createRouter();
+    const store = createStore();
+    const app = new Vue({
+        router, // 把路由挂载到 Vue 根实例中
+        store, // 把容器挂载到 Vue 根实例
+        // 根实例简单的渲染应用程序组件。
+        render: h => h(App)
+    });
+    return { app, router, store };
+}
+  ```
+  
+  （2）在组件中使用 serverPrefetch 触发容器中的 action
+  
+  ```
+  <template>
+    <div>
+        <h1>Post List</h1>
+        <ul>
+            <li v-for="post in posts" :key="post.id">{{ post.title }}</li>
+        </ul>
+    </div>
+</template>
+<script>
+// import axios from 'axios'
+import { mapState, mapActions } from "vuex";
+export default {
+    name: "PostList",
+    metaInfo: {
+        title: "Posts"
+    },
+    data() {
+        return {
+            // posts: []
+        };
+    },
+    computed: {
+        ...mapState(["posts"])
+    },
+    //Vue SSR特殊为服务端渲染提供的一个生命周期钩子函数
+    serverPrefetch() {
+        //发起 action, 返回Promise
+        return this.getPosts();
+    },
+    // 服务端渲染
+    // 只支持 beforeCreate 和 created
+    // 不会等待 beforeCreate 和 created 中的异步操作
+    // 不支持响应式数据
+    // 所有这种做法在服务端渲染中是不会工作的！！！
+    // async created () {
+    // console.log('Posts Created Start')
+    // const { data } = await axios({
+    // method: 'GET',
+    // url: 'https://cnodejs.org/api/v1/topics'
+    // })
+    // this.posts = data.data
+    // console.log('Posts Created End')
+    // },
+    methods: {
+        ...mapActions(["getPosts"])
+    }
+};
+</script>
+<style></style>
+  ```
+  
