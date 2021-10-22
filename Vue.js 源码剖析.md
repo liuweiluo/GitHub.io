@@ -1,5 +1,33 @@
 ## Vue.js 源码剖析
 
+### Vue首次渲染的过程
+- 01.定义Vue构造函数（包括定义实例成员和静态成员）
+- 02.新建Vue实例（new Vue()），然后调用this._init()方法初始化实例成员和静态成员，最后调用vm.$mount() 方法挂载
+- 03.调用vm.$mount() 方法有2种情况:
+  - 完整版: 先调用 src\platforms\web\entry-runtime-with-compiler.js 里的$mount方法，该方法里先判断是否存在render选项，若存在直接使用render选项对应的render函数，否则先把template模板编译    成render函数，如果没有template模板，获取el的 outerHTML 作为template模板，然后把render函数记录在选项里（options.render=render），最后调用 src\platforms\web\runtime\index.js 中的        vm.$mount()方法（这里会重新获取el,因为运行时版需要el）。
+  - 运行时版：直接调用 src\platforms\web\runtime\index.js 中的vm.$mount()方法（这里会获取el）。
+- 04.调用mountComponent()方法: 调用 src\platforms\web\runtime\index.js 中的vm.$mount()方法会调用mountComponent()方法，在该方法里首先触发beforeMount钩子函数，然后定义updateComponent方法（注意：这里只是定义并没有调用，涉及2个函数待补充）
+- 05.创建Watcher实例: 创建Watcher实例时会把updateComponent方法以参数形式传入，创建完watcher实例后会调用一次get()方法，get()方法里会调用传入的updateComponent方法
+- 06.触发Mounted钩子函数
+- 07.返回实例
+
+###  Vue 响应式原理
+
+- 01.调用initState()方法: 当新建Vue实例（new Vue()），会调用this._init()方法初始化实例成员，此时会调用initState()方法去始化 vm 的 _props/methods/_data/computed/watch...
+- 02.调用initData()方法：调用initState()方法后继续调用initData()方法把data属性注入vm实例中。
+- 03.调用observe()方法：在调用initData()方法里会调用observe()方法把data对象转换响应式对象。
+- 04.在observe()方法中首先判断value是否是对象，如果不是对象直接返回，继续判断value对象是否存在_ob_属性，如果有直接返回该属性，如果没有创建observer对象并返回该对象实例。
+- 05.创建observer对象中给value对象定义不可枚举的__ob__属性，该属性记录当前的observer对象，然后进行数组的响应式处理（对数组中的对象和数组部分特殊的方法进行响应式处理）和对象进行响应式处理（调用walk方法）
+- 06.调用walk方法：walk方法里会遍历对象中每一个属性调用defineReactive方法设置为响应式数据（转换成 setter/getter）
+- 07.调用defineReactive方法：在该方法里会为每个属性创建dep对象，如果当前属性的值是对象，会调用observe()方法转为响应式对象，然后定义getter和setter，getter方法作用是收集依赖和返回属性值，setter方法作用是保存新值，如果新值是对象则会调用observe()方法，同时因为数据发送变化，会派发更新（即发送通知，调用dep.notyfy方法）
+- 08.收集依赖：在watcher对象的get方法中调用pushTarget,记录Dep.target属性，访问data中的成员的时候收集依赖，defineReactive的getter中收集依赖，把属性对应的 watcher 对象添加到dep的subs数组中，给childOb收集依赖，目的是子对象添加和删除成员时发送通知。
+- 09.触发wacher对象的update()方法：派发更新(即发送通知，调用dep.notyfy方法)后，就会调用wacher对象的update()方法。
+
+### 虚拟 DOM 中 Key 的作用和好处
+
+- 作用：key是Vnode的唯一标记，在比较新旧Vnode（diff操作）中它能够跟踪每个Vnode，通过key可以精准判断两个节点是否是同一个，在某种情况下（注意这里是不是绝对的）可以避免频繁更新不同元素，可以减少dom的操作，减少diff和渲染所需要的时间，提升了性能
+- ps: 不使用 key，Vue 会使用一种最大限度减少动态元素并且尽可能的尝试就地修改/复用相同类型元素的算法，某种情况下会减少dom操作
+
 ### diff算法过程
 
 #### 打补丁过程从patch方法开始
