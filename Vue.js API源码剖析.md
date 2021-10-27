@@ -211,4 +211,8 @@ evaluate () {
 
 下次没有特殊情况再读取到 sum 的时候，发现 dirty是false了，是不是直接就返回 watcher.value 这个值就可以了，这其实就是计算属性缓存的概念。
 
+参考：https://blog.csdn.net/weixin_39843414/article/details/106152585
 
+### 浅析Vue.nextTick()原理
+
+参考：https://segmentfault.com/a/1190000020499713
