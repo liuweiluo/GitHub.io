@@ -358,3 +358,38 @@ function patchVnode(oldVnode: VNode, vnode: VNode, insertedVnodeQueue: VNodeQueu
 看得可能有点蒙蔽,下面再上一副思维导图:
 
 ![image](https://user-images.githubusercontent.com/37037802/140885965-3e4a20e1-520c-42b3-bc5f-ac27b68dca60.png)
+
+### diff算法简介
+
+#### 传统diff算法
+
+- 查找两颗树每一个节点的差异,会运行n1(dom1的节点数)*n2(dom2的节点数)次方去对比,找到差异的部分再去更新
+
+![image](https://user-images.githubusercontent.com/37037802/140890702-27dd6b43-118b-4acd-9ef7-3f24cff925d1.png)
+
+
+#### snabbdom的diff算法
+- Snbbdom根据DOM的特点对传统的diff算法做了优化
+- DOM操作时候很少会跨级别操作节点
+- 只比较同级别的节点
+
+![image](https://user-images.githubusercontent.com/37037802/140891128-c73e424a-916f-4853-a533-6a3b9664ce42.png)
+
+#### 因为DOM操作时候很少会跨级别操作节点，所以在节点比较的时候只需比较同级别的节点，如果同级别的节点不相同，则直接删除重新创建，同级别的节点只需比较一次，从而达到减少对比次数的目的。
+
+同级别节点比较的4种情况:
+
+- oldStartVnode/newStartVnode(旧开始节点/新开始节点)相同
+- oldEndVnode/newEndVnode(旧结束节点/新结束节点)相同
+- oldStartVnode/newEndVnode(旧开始节点/新结束节点)相同
+- oldEndVnode/newStartVnode(旧结束节点/新开始节点)相同
+
+![image](https://user-images.githubusercontent.com/37037802/140893476-e35109db-9443-4ab6-b583-08561b4efacc.png)
+
+执行过程是一个循环,在每次循环里,只要执行了上述的情况的4种之一就会结束一次循环
+
+循环结束的收尾工作:直到oldStartIdx>oldEndIdx || newStartIdx>newEndIdx(代表旧节点或者新节点已经遍历完)
+
+- 新开始节点和旧开始节点(情况1)
+
+
