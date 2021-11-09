@@ -390,6 +390,8 @@ function patchVnode(oldVnode: VNode, vnode: VNode, insertedVnodeQueue: VNodeQueu
 
 循环结束的收尾工作:直到oldStartIdx>oldEndIdx || newStartIdx>newEndIdx(代表旧节点或者新节点已经遍历完)
 
-- 新开始节点和旧开始节点(情况1)
+#### 新开始节点和旧开始节点(情况1)
+
+如果新旧节点是sameVnode(key和sel相同)，则执行patchVnode找出两者之间的差异,更新节点，比较完成后索引会移动至下个索引的位置（oldStartIdx++/newStartIdx++），如没有差异则什么都不操作,结束一次循环
 
 
