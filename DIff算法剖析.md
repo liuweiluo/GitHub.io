@@ -437,3 +437,97 @@ function patchVnode(oldVnode: VNode, vnode: VNode, insertedVnodeQueue: VNodeQueu
 - 若旧节点先遍历完（oldStartIdx>oldEndIdx）说明新节点有剩余，然后把剩余的新节点插入至旧节点对应的真实DOM的末尾位置
 - 若新节点先遍历完（newStartIdx>newEndIdx）说明旧节点有剩余，然后把旧节点中剩余节点批量删除
 
+最后附上源码:
+```
+function updateChildren(parentElm, oldCh, newCh, insertedVnodeQueue) {
+    let oldStartIdx = 0;                // 旧节点开始节点索引
+    let newStartIdx = 0;                // 新节点开始节点索引
+    let oldEndIdx = oldCh.length - 1;   // 旧节点结束节点索引
+    let oldStartVnode = oldCh[0];       // 旧节点开始节点
+    let oldEndVnode = oldCh[oldEndIdx]; // 旧节点结束节点
+    let newEndIdx = newCh.length - 1;   // 新节点结束节点索引
+    let newStartVnode = newCh[0];       // 新节点开始节点
+    let newEndVnode = newCh[newEndIdx]; // 新节点结束节点
+    let oldKeyToIdx;                    // 节点移动相关
+    let idxInOld;                       // 节点移动相关
+    let elmToMove;                      // 节点移动相关
+    let before;
+
+
+    // 同级别节点比较
+    while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+        if (oldStartVnode == null) {
+            oldStartVnode = oldCh[++oldStartIdx]; // Vnode might have been moved left
+        }
+        else if (oldEndVnode == null) {
+            oldEndVnode = oldCh[--oldEndIdx];
+        }
+        else if (newStartVnode == null) {
+            newStartVnode = newCh[++newStartIdx];
+        }
+        else if (newEndVnode == null) {
+            newEndVnode = newCh[--newEndIdx];
+        }
+        else if (sameVnode(oldStartVnode, newStartVnode)) { // 判断情况1
+            patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue);
+            oldStartVnode = oldCh[++oldStartIdx];
+            newStartVnode = newCh[++newStartIdx];
+        }
+        else if (sameVnode(oldEndVnode, newEndVnode)) {   // 情况2
+            patchVnode(oldEndVnode, newEndVnode, insertedVnodeQueue);
+            oldEndVnode = oldCh[--oldEndIdx];
+            newEndVnode = newCh[--newEndIdx];
+        }
+        else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right情况3
+            patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue);
+            api.insertBefore(parentElm, oldStartVnode.elm, api.nextSibling(oldEndVnode.elm));
+            oldStartVnode = oldCh[++oldStartIdx];
+            newEndVnode = newCh[--newEndIdx];
+        }
+        else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left情况4
+            patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue);
+            api.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm);
+            oldEndVnode = oldCh[--oldEndIdx];
+            newStartVnode = newCh[++newStartIdx];
+        }
+        else {                                             // 情况5
+            if (oldKeyToIdx === undefined) {
+                oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx);
+            }
+            idxInOld = oldKeyToIdx[newStartVnode.key];
+            if (isUndef(idxInOld)) { // New element        // 创建新的节点在旧节点的新节点前
+                api.insertBefore(parentElm, createElm(newStartVnode, insertedVnodeQueue), oldStartVnode.elm);
+            }
+            else {
+                elmToMove = oldCh[idxInOld];
+                if (elmToMove.sel !== newStartVnode.sel) { // 创建新的节点在旧节点的新节点前
+                    api.insertBefore(parentElm, createElm(newStartVnode, insertedVnodeQueue), oldStartVnode.elm);
+                }
+                else {
+                                                           // 在旧节点数组中找到相同的节点就对比差异更新视图,然后移动位置
+                    patchVnode(elmToMove, newStartVnode, insertedVnodeQueue);
+                    oldCh[idxInOld] = undefined;
+                    api.insertBefore(parentElm, elmToMove.elm, oldStartVnode.elm);
+                }
+            }
+            newStartVnode = newCh[++newStartIdx];
+        }
+    }
+    // 循环结束的收尾工作
+    if (oldStartIdx <= oldEndIdx || newStartIdx <= newEndIdx) {
+        if (oldStartIdx > oldEndIdx) {
+            // newCh[newEndIdx + 1].elm就是旧节点数组中的结束节点对应的dom元素
+            // newEndIdx+1是因为在之前成功匹配了newEndIdx需要-1
+            // newCh[newEndIdx + 1].elm,因为已经匹配过有相同的节点了,它就是等于旧节点数组中的结束节点对应的dom元素(oldCh[oldEndIdx + 1].elm)
+            before = newCh[newEndIdx + 1] == null ? null : newCh[newEndIdx + 1].elm;
+            // 把新节点数组中多出来的节点插入到before前
+            addVnodes(parentElm, before, newCh, newStartIdx, newEndIdx, insertedVnodeQueue);
+        }
+        else {
+            // 这里就是把没有匹配到相同节点的节点删除掉
+            removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx);
+        }
+    }
+}
+
+```
