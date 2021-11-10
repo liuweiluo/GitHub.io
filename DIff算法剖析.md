@@ -424,5 +424,16 @@ function patchVnode(oldVnode: VNode, vnode: VNode, insertedVnodeQueue: VNodeQueu
 
 #### 上述4种情况都不符合（即旧新开始节点和结束节点都不相同）(情况5)
 
-- 上述4种情况都不符合则在旧节点（oldVnodes）里面遍历寻找跟新开始节点（newStartVnode）相同的节点，若没有找到（说明新开始节点是新的节点）就创建真实DOM节点并移到,
+- 上述4种情况都不符合，则在旧节点（oldVnodes）里面遍历寻找跟新开始节点（newStartVnode）相同的节点
+- 若没有找到相同的节点（说明新开始节点是新的节点）则创建新开始节点对应的真实DOM节点并插入至旧节点对应的真实DOM的最前位置（即旧开始节点对应的真实DOM节点(oldStartVnode.elm)前）
+- 若找到了相同的节点，则执行patchVnode找出两者之间的差异,更新节点，然后把找到的旧节点（elmToMove）对应的真实DOM移动至旧节点对应的真实DOM的最前位置(（即旧开始节点对应的真实DOM节点(oldStartVnode.elm)前)
+- 新开始节点会往后移动一个位置（newStartIdx++）
+
+![image](https://user-images.githubusercontent.com/37037802/141090349-e2ba3c97-dca5-4f63-9f06-5cf74a4e27be.png)
+
+
+#### 结束循环后存在2种情况(oldStartIdx>oldEndIdx || newStartIdx>newEndIdx)
+
+- 若旧节点先遍历完（oldStartIdx>oldEndIdx）说明新节点有剩余，然后把剩余的新节点插入至旧节点对应的真实DOM的末尾位置
+- 若新节点先遍历完（newStartIdx>newEndIdx）说明旧节点有剩余，然后把旧节点中剩余节点批量删除
 
