@@ -393,31 +393,27 @@ function patchVnode(oldVnode: VNode, vnode: VNode, insertedVnodeQueue: VNodeQueu
 
 #### 比较新开始节点和旧开始节点(情况1)
 
-- 如果新旧开始节点是sameVnode(key和sel相同)，则执行patchVnode找出两者之间的差异,更新节点（把这部分节点转换为真实DOM，并存储在vode.elm属性，注意这里并没有渲染至页面），
-比较完成后索引会移动至下个索引的位置（oldStartIdx++/newStartIdx++）
+- 如果新旧开始节点是sameVnode(key和sel相同)，则执行patchVnode继续找出两者之间的差异，比较完成后索引会移动至下个索引的位置（oldStartIdx++/newStartIdx++）
 - 如果新旧开始节点不是sameVnode(key和sel相同)，则继续往下判断（进行情况2）
 
 ![image](https://user-images.githubusercontent.com/37037802/141061808-289f6722-ba31-4683-962c-cfbd5db0ee6b.png)
 
 #### 比较新结束节点和旧结束节点(情况2)
 
-- 如果新旧结束节点是sameVnode(key和sel相同)，则执行patchVnode找出两者之间的差异,更新节点（把这部分节点转换为真实DOM，并存储在vode.elm属性，注意这里并没有渲染至页面），
-比较完成后索引会往前移动一个位置（即倒数第二个节点作为新旧结束节点索引的位置）（oldEndIdx--/newEndIdx--）
+- 如果新旧结束节点是sameVnode(key和sel相同)，则执行patchVnode继续找出两者之间的差异，比较完成后索引会往前移动一个位置（即倒数第二个节点作为新旧结束节点索引的位置）（oldEndIdx--/newEndIdx--）
 - 如果新结束旧节点不是sameVnode(key和sel相同)，则继续往下判断（进行情况3）
 
 ![image](https://user-images.githubusercontent.com/37037802/141064292-a90536e3-e6d8-44d9-a5b9-9298809520fa.png)
 
 #### 比较旧开始节点和新结束节点(情况3)
-- 如果旧开始节点和新结束节点是sameVnode(key和sel相同)，则执行patchVnode找出两者之间的差异,更新节点（把这部分节点转换为真实DOM，并存储在vode.elm属性，注意这里并没有渲染至页面），
-比较完成后旧开始节点转为对应的真实dom后会移动至最后的位置，旧开始节点的索引会往后移动一个位置，新结束节点会往前移动一个位置（oldStartIdx++/newEndIdx--）
+- 如果旧开始节点和新结束节点是sameVnode(key和sel相同)，则执行patchVnode继续找出两者之间的差异，比较完成后旧开始节点转为对应的真实dom后会移动至最后的位置，旧开始节点的索引会往后移动一个位置，新结束节点会往前移动一个位置（oldStartIdx++/newEndIdx--）
 - 如果旧开始节点和新结束节点不是sameVnode(key和sel相同)，则继续往下判断（进行情况4）
 
 ![image](https://user-images.githubusercontent.com/37037802/141066163-6d4bb662-4df4-400b-afe2-b3b6f17a6280.png)
 
 #### 比较旧结束节点和新开始节点(情况4)
 
-- 如果旧结束节点和新开始节点是sameVnode(key和sel相同)，则执行patchVnode找出两者之间的差异,更新节点（把这部分节点转换为真实DOM，并存储在vode.elm属性，注意这里并没有渲染至页面），
-比较完成后旧结束节点转为对应的真实dom并移动至最前的位置，旧结束节点的索引会往前移动一个位置，新开始节点会往后移动一个位置（oldEndIdx--/newStartIdx++）
+- 如果旧结束节点和新开始节点是sameVnode(key和sel相同)，则执行patchVnode找出两者之间的差异，比较完成后旧结束节点转为对应的真实dom并移动至最前的位置，旧结束节点的索引会往前移动一个位置，新开始节点会往后移动一个位置（oldEndIdx--/newStartIdx++）
 - 如果旧结束节点和新开始节点不是sameVnode(key和sel相同)，则继续往下判断（进行情况5）
 
 ![image](https://user-images.githubusercontent.com/37037802/141069524-4772dfce-4e9e-417e-b438-52f6ca10227a.png)
