@@ -5,11 +5,11 @@
 
 ### 步骤
 
-1.新建文件：在根目录下新建markdown-loader.js文件，完成后可以把这模块发布npm作为一个独立的模块去使用
+#### 1.新建文件：在根目录下新建markdown-loader.js文件，完成后可以把这模块发布npm作为一个独立的模块去使用
 
 ![image](https://user-images.githubusercontent.com/37037802/143236644-b1a2ac74-43bc-4144-a858-091ce3f4e88d.png)
 
-2.导出函数：每个webpack的loader都需要导出一个函数，而这函数就是对资源的处理过程,它的输入是需要加载的资源文件的内容（通过参数source接收输入），输出就是加工后的内容（通过retrun返回处理结果）
+#### 2.导出函数：每个webpack的loader都需要导出一个函数，而这函数就是对资源的处理过程,它的输入是需要加载的资源文件的内容（通过参数source接收输入），输出就是加工后的内容（通过retrun返回处理结果）
 
 /markdown-loader.js
 ```
@@ -19,7 +19,7 @@ module.exports = source => {
 }
 ```
 
-3.配置测试：在webpack.config.js配置文件里添加一个加载器的规则配置
+#### 3.配置测试：在webpack.config.js配置文件里添加一个加载器的规则配置
 
 ```
 const path = require('path')
@@ -44,7 +44,7 @@ module.exports = {
 
 ```
 
-4.测试结果：可能出现解析错误
+#### 4.测试结果：可能出现解析错误
 
 ![image](https://user-images.githubusercontent.com/37037802/143242380-609cfe1d-9e01-4aaf-b577-0cad843efb3d.png)
 
@@ -63,9 +63,9 @@ module.exports = {
 ![image](https://user-images.githubusercontent.com/37037802/143243743-d18b8a6f-bfe8-4bb9-b780-c39e080b795e.png)
 
 
-#### 所以这里报错的原因就是因为返回的内容是'hello ~'并不是标准的js代码才导致报错。
+##### 所以这里报错的原因就是因为返回的内容是'hello ~'并不是标准的js代码才导致报错。
 
-5.解决办法：
+#### 5.解决办法：
 
 - 解决办法1：返回标准的js代码
 
@@ -84,8 +84,19 @@ module.exports = source => {
 
 通过打包结果可以看出：其实就是把加载后返回的结果（js代码）直接拼接到模块当中了，同时也解释了loader管道最后必须要返回js代码的原因
 
+安装导入marked依赖去处理
+```
+const marked = require('marked')
+
+module.exports = source => {
+  const html = marked(source)
+  // return `module.exports = "${html}"`  如果使用这方式会把html存在的换行符和引号拼接会造成语法上的错误
+  return `export default ${JSON.stringify(html)}` //这里使用小技巧先把字符串转为JSON格式字符串，此时存在的换行符和引号都会被转义后再参与拼接就没问题了
+}
+```
 
 - 解决办法2：再找一个合适的加载器接着去处理这里返回的结果
+- 
 ![image](https://user-images.githubusercontent.com/37037802/143244672-974a36d8-61a1-4637-9820-6c4c770499a5.png)
 
 
