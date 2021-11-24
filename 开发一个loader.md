@@ -96,8 +96,38 @@ module.exports = source => {
 ```
 
 - 解决办法2：再找一个合适的加载器接着去处理这里返回的结果
-- 
+
 ![image](https://user-images.githubusercontent.com/37037802/143244672-974a36d8-61a1-4637-9820-6c4c770499a5.png)
+
+```
+const marked = require('marked')
+
+module.exports = source => {
+  const html = marked(source)
+  // 返回 html 字符串交给下一个 loader 处理 
+  return html
+}
+
+```
+
+这里可以使用html-loader去继续处理
+
+```
+module.exports = {
+...
+  module: {
+    rules: [
+      {
+        test: /.md$/,
+        use: [
+          'html-loader',
+          './markdown-loader'
+        ]
+      }
+    ]
+  }
+}
+```
 
 
 
