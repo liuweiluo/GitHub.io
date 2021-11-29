@@ -8,5 +8,35 @@ ES2015就提供了Iterable接口，可以了解为规格标准，例如我们在
 
 实现Iterable接口就是for...of的前提，换句话说就是这个数据结构有Iterable接口，它就能使用for...of进行遍历。
 
+### 看看能被使用for...of进行遍历的数据结构共同特点
+
+- 数组
+
+```
+console.log([])
+```
+查看数组原型对象可以看到 Symbol.iterator 方法
+
+![image](https://user-images.githubusercontent.com/37037802/143867854-e3e85632-0f87-49e1-8ace-9474a99ef658.png)
+
+- Set对象
+```
+console.log(new Set())
+```
+
+查看Set对象原型对象也可以看到 Symbol.iterator 方法
+
+![image](https://user-images.githubusercontent.com/37037802/143867854-e3e85632-0f87-49e1-8ace-9474a99ef658.png)
+
+- Map对象
+```
+console.log(new Map())
+```
+
+查看Map对象原型对象也可以看到 Symbol.iterator 方法
+
+![image](https://user-images.githubusercontent.com/37037802/143867854-e3e85632-0f87-49e1-8ace-9474a99ef658.png)
+
+
 
 
