@@ -8,7 +8,7 @@ ES2015就提供了Iterable接口，可以了解为规格标准，例如我们在
 
 实现Iterable接口就是for...of的前提，换句话说就是这个数据结构有Iterable接口，它就能使用for...of进行遍历。
 
-### 看看能被使用for...of进行遍历的数据结构共同特点
+### 能被使用for...of进行遍历的数据结构共同特点
 
 - 数组
 
@@ -38,5 +38,45 @@ console.log(new Map())
 ![image](https://user-images.githubusercontent.com/37037802/143867854-e3e85632-0f87-49e1-8ace-9474a99ef658.png)
 
 
-待更新...
+### 分析Symbol.iterator方法
+
+- 调用Symbol.iterator方法
+```
+const arr= ['foo','bar','baz']
+
+arr[Symbol.iterator]()
+```
+
+发现调用的结果是数组的迭代器对象 Array Iterator{}
+
+![image](https://user-images.githubusercontent.com/37037802/144004595-f4fac8a5-86d3-4cdf-a797-eede426cafa8.png)
+
+- 调用对象中的next方法
+
+```
+const iterator = arr[Symbol.iterator]()
+
+iterator.next()
+```
+
+结果返回为一个对象，对象中有2个属性（value,done）,其中value值就是我们数组中第1个元素值
+
+![image](https://user-images.githubusercontent.com/37037802/144005072-895c38f3-8f42-42e9-8f57-1013ee793e0e.png)
+
+- 再次调用next方法
+
+![image](https://user-images.githubusercontent.com/37037802/144005371-9061229b-3744-4350-90ea-085f56a3d60c.png)
+
+结果返回为一个与之前相同结构的对象,只不过value值为数组第2个元素值而已
+
+#### 总结：有分析可看出，在迭代器当中内部应该是维护了数据指针，每调用一次next()，指针都会往后移动一位，done属性的作用就是表示数据是否被遍历完成
+
+
+
+
+
+
+
+
+
 
