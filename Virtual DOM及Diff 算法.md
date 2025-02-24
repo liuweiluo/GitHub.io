@@ -29,7 +29,7 @@ React.createElement(
 
 以下为总体流程：
 
-![image](https://github.com/user-attachments/assets/84c09396-5517-441f-8fff-15e5670b9a1e)
+![image](https://github.com/user-attachments/assets/e31b8fd1-db24-4ff9-b072-1b1583ef73e9)
 
 ### 2. DOM 操作问题
 
