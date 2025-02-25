@@ -141,7 +141,60 @@ const after = {
 }
 ```
 
+### 5. 实现一个精简版React框架（TinyReact）
 
+#### 1.配置.babelrc文件，让 Babel 编译时使用 TinyReact.createElement 方法，否则默认使用 React.createElement
+```
+{
+  "presets": [
+    "@babel/preset-env",
+    [
+      "@babel/preset-react",
+      {
+        "pragma": "TinyReact.createElement"
+      }
+    ]
+  ]
+}
+```
 
+#### 2.实现 createElement 方法用于创建 Virtual DOM 对象 ，并在 TinyReact目录下 index.js 中导出该方法
+``` JavaScript
+export default function createElement(type, props, ...children) {
+  const childElements = [].concat(...children).reduce((result, child) => {
+    if (child !== false && child !== true && child !== null) {
+      if (child instanceof Object) {
+        result.push(child)
+      } else {
+        result.push(createElement("text", { textContent: child }))
+      }
+    }
+    return result
+  }, [])
+  return {
+    type,
+    props: Object.assign({ children: childElements }, props),
+    children: childElements
+  }
+}
+```
 
+#### 3.实现 render 方法用于 Virtual DOM 对象转化真实 DOM 对象，并在 TinyReact目录下 index.js 中导出该方法
+``` JavaScript
+import diff from "./diff"
 
+export default function render(
+  virtualDOM,
+  container,
+  oldDOM = container.firstChild
+) {
+  diff(virtualDOM, container, oldDOM)
+}
+
+```
+
+#### 4.实现 diff 方法用于比对 新旧 Virtual DOM 对象
+
+``` JavaScript
+待补充
+```
