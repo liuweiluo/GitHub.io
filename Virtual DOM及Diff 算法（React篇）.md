@@ -29,7 +29,8 @@ React.createElement(
 
 以下为总体流程：
 
-![image](https://github.com/user-attachments/assets/e31b8fd1-db24-4ff9-b072-1b1583ef73e9)
+![image](https://github.com/user-attachments/assets/66956b55-64c3-4931-b6d7-5406b1864218)
+
 
 ### 2. DOM 操作问题
 
@@ -141,7 +142,15 @@ const after = {
 }
 ```
 
-### 5. 实现一个精简版React框架（TinyReact）
+### 5. Virtual DOM 对象转化为真实 DOM 对象，即 Diff 过程
+
+Diff过程可分为2种情况：
+
+1.如果容器中没有旧的 DOM， 直接把 Virtual DOM 转换真实 DOM 后挂载在容器上即可 
+
+2.如果容器中存在旧的 DOM， 要先把 Virtual DOM 与旧 DOM 的 Virtual DOM 进行对比后把不同部分更新到容器上（注意这里并非重新挂载） 
+
+### 6. 实现一个精简版React框架（TinyReact）
 
 #### 1.配置.babelrc文件，让 Babel 编译时使用 TinyReact.createElement 方法，否则默认使用 React.createElement
 ```
